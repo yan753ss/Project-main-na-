@@ -1,0 +1,242 @@
+{
+  "info": {
+    "_postman_id": "c2bd58ae-5fdb-4d83-bf03-f6e37df5f6aa",
+    "name": "Магазин бытовой техники",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User / Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{user_base_url}}/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 or 409', function () {",
+              "  pm.expect([200, 409]).to.include(pm.response.code);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "  const json = pm.response.json();",
+              "  pm.test('Registered email matches variable', function () {",
+              "    pm.expect(json.email).to.eql(pm.collectionVariables.get('email'));",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "User / Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{user_base_url}}/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Access token exists', function () {",
+              "  pm.expect(json.access_token).to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "pm.collectionVariables.set('access_token', json.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "User / Users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{user_base_url}}/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Response is an array', function () {",
+              "  pm.expect(json).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Registered user exists in list', function () {",
+              "  const email = pm.collectionVariables.get('email');",
+              "  const found = json.some(user => user.email === email);",
+              "  pm.expect(found).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product / List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{product_base_url}}/products?limit=5"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Products response has items array', function () {",
+              "  pm.expect(json.items).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Pagination fields exist', function () {",
+              "  pm.expect(json).to.have.property('total');",
+              "  pm.expect(json).to.have.property('offset');",
+              "  pm.expect(json).to.have.property('limit');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}"
+        },
+        "url": "{{order_base_url}}/order"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Order id exists', function () {",
+              "  pm.expect(json.order.id).to.be.a('number');",
+              "});",
+              "",
+              "pm.collectionVariables.set('order_id', json.order.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order / List",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{order_base_url}}/orders"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Items exists', function () {",
+              "  pm.expect(json.items).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Created order exists in list', function () {",
+              "  const id = Number(pm.collectionVariables.get('order_id'));",
+              "  const found = json.items.some(order => order.id === id);",
+              "  pm.expect(found).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order / Update Status",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{order_base_url}}/order/{{order_id}}/status?new_status=paid"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test('Order status updated to paid', function () {",
+              "  pm.expect(json.order.status).to.eql('paid');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "user_base_url", "value": "http://localhost:8000" },
+    { "key": "product_base_url", "value": "http://localhost:8001" },
+    { "key": "order_base_url", "value": "http://localhost:8002" },
+    { "key": "email", "value": "student@example.com" },
+    { "key": "password", "value": "Password123" },
+    { "key": "access_token", "value": "" },
+    { "key": "order_id", "value": "" }
+  ]
+}
