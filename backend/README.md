@@ -53,3 +53,42 @@ docker compose down
 
 Используйте их после автотестов в SQL IDE (DBeaver/DataGrip/phpMyAdmin),
 подставив свои значения параметров (`:email`, `:order_id`, `:user_id` и т.д.).
+
+## 6) Быстрый запуск автопроверки PostgreSQL
+
+Схема БД инициализируется автоматически из файла:
+
+`backend/postgres/init_schema.sql`
+
+### 6.1 Поднять PostgreSQL
+
+```bash
+docker compose --env-file .env up -d postgres
+```
+
+### 6.2 Автоматически прогнать SQL-проверки
+
+```bash
+docker compose exec -T postgres psql \
+  -U ${POSTGRES_USER:-shop_user} \
+  -d ${POSTGRES_DB:-shop_db} \
+  -v email="'student@example.com'" \
+  -v expected_name="'Иван Иванов'" \
+  -v order_id=1 \
+  -v user_id=1 \
+  -v product_id=1 \
+  -v comment_id=1 \
+  -f /workspace/backend/db_verification_checks.sql
+```
+
+### 6.3 Ручная проверка в SQL IDE
+
+Подключение:
+- host: `localhost`
+- port: `5432`
+- db: `shop_db`
+- user: `shop_user`
+- password: `shop_pass`
+
+Далее открыть `backend/db_verification_checks.sql`, подставить параметры
+и выполнить запросы по блокам.
