@@ -78,7 +78,7 @@ docker compose exec -T postgres psql \
   -v user_id=1 \
   -v product_id=1 \
   -v comment_id=1 \
-  -f /workspace/backend/db_verification_checks.sql
+  -f - < ./db_verification_checks.sql
 ```
 
 ### 6.3 Ручная проверка в SQL IDE
