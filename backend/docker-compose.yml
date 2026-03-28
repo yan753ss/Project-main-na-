@@ -26,6 +26,13 @@ services:
   order:
     build: ./order_service
     ports: ["8002:8002"]
+    environment:
+      ORDER_STORAGE: ${ORDER_STORAGE:-mongodb}
+      ORDER_MONGODB_URI: ${ORDER_MONGODB_URI:-mongodb://mongo:27017}
+      ORDER_MONGODB_DB: ${ORDER_MONGODB_DB:-shop}
+      ORDER_MONGODB_COLLECTION: ${ORDER_MONGODB_COLLECTION:-orders}
+    depends_on:
+      - mongo
 
   notification:
     build: ./notification_service
@@ -39,11 +46,25 @@ services:
       - rabbitmq
 
   mongo:
-    image: mongo:7
+    image: mongo:4.4
     ports: ["27017:27017"]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shop_db}
+      POSTGRES_USER: ${POSTGRES_USER:-shop_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shop_pass}
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init_schema.sql:/docker-entrypoint-initdb.d/01-init_schema.sql:ro
 
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672"
+
+volumes:
+  postgres_data:
