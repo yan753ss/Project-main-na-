@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<head><title>DNS Demo</title></head>
+<body>
+<h1>Интернет-магазин</h1>
+<button onclick="load()">Показать товары</button>
+<ul id="list"></ul>
+<script>
+function load() {
+ fetch("http://localhost:8001/products")
+ .then(r=>r.json())
+ .then(d=>{
+   let l=document.getElementById("list");
+   l.innerHTML="";
+   d.forEach(p=>{
+     let i=document.createElement("li");
+     i.innerText=p.name+" "+p.price;
+     l.appendChild(i);
+   });
+ })
+}
+</script>
+</body>
+</html>
