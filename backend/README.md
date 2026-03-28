@@ -72,11 +72,14 @@ docker compose --env-file .env up -d postgres
 docker compose exec -T postgres psql \
   -U ${POSTGRES_USER:-shop_user} \
   -d ${POSTGRES_DB:-shop_db} \
+  -v email="'student@example.com'" \
+  -v expected_name="'Иван Иванов'" \
+  -v order_id=1 \
+  -v user_id=1 \
+  -v product_id=1 \
+  -v comment_id=1 \
   -f - < ./db_verification_checks.sql
 ```
-
-Важно: перед запуском замените тестовые значения прямо в `db_verification_checks.sql`
-(`student@example.com`, `Иван Иванов`, `1`) на ваши реальные данные из прогона.
 
 ### 6.3 Ручная проверка в SQL IDE
 
