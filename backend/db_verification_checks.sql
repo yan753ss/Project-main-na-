@@ -3,13 +3,10 @@
 -- Файл: backend/db_verification_checks.sql
 -- ============================================================
 --
--- Параметры для подстановки в SQL IDE:
---   :email                -> email пользователя из теста регистрации
---   :expected_name        -> ожидаемое имя пользователя (если поле есть)
---   :order_id             -> ID заказа из API/автотеста
---   :user_id              -> ID пользователя, создавшего заказ/комментарий
---   :product_id           -> ID товара в заказе
---   :comment_id           -> ID комментария (если есть сущность comments)
+-- Перед запуском замените тестовые значения в запросах:
+--   'student@example.com' -> email пользователя из теста регистрации
+--   'Иван Иванов'         -> ожидаемое имя пользователя (если поле name есть)
+--   1                     -> реальные ID (order_id/user_id/product_id/comment_id)
 --
 -- Примечание:
 -- Запросы ниже ориентированы на типичную реляционную схему:
@@ -23,7 +20,7 @@
 -- 1.1 Проверка, что запись появилась в users
 SELECT COUNT(*) AS users_count
 FROM users
-WHERE email = :email;
+WHERE email = 'student@example.com';
 
 -- 1.2 Проверка корректности ключевых полей
 SELECT
@@ -33,13 +30,13 @@ SELECT
     is_active,
     created_at
 FROM users
-WHERE email = :email;
+WHERE email = 'student@example.com';
 
 -- 1.3 (Опционально) Сравнение с ожидаемыми значениями
 SELECT COUNT(*) AS users_expected_match
 FROM users
-WHERE email = :email
-  AND name = :expected_name
+WHERE email = 'student@example.com'
+  AND name = 'Иван Иванов'
   AND is_active = TRUE;
 
 
@@ -50,8 +47,8 @@ WHERE email = :email
 -- 2.1 Проверка, что заказ появился в orders
 SELECT COUNT(*) AS orders_count
 FROM orders
-WHERE id = :order_id
-  AND user_id = :user_id;
+WHERE id = 1
+  AND user_id = 1;
 
 -- 2.2 Проверка корректности полей заказа
 SELECT
@@ -61,12 +58,12 @@ SELECT
     total_amount,
     created_at
 FROM orders
-WHERE id = :order_id;
+WHERE id = 1;
 
 -- 2.3 Проверка дочерних строк заказа (order_items)
 SELECT COUNT(*) AS order_items_count
 FROM order_items
-WHERE order_id = :order_id;
+WHERE order_id = 1;
 
 -- 2.4 Проверка корректности конкретной позиции заказа
 SELECT
@@ -75,8 +72,8 @@ SELECT
     quantity,
     unit_price
 FROM order_items
-WHERE order_id = :order_id
-  AND product_id = :product_id;
+WHERE order_id = 1
+  AND product_id = 1;
 
 
 /* ============================================================
@@ -86,8 +83,8 @@ WHERE order_id = :order_id
 -- 3.1 Проверка появления комментария
 SELECT COUNT(*) AS comments_count
 FROM comments
-WHERE id = :comment_id
-  AND user_id = :user_id;
+WHERE id = 1
+  AND user_id = 1;
 
 -- 3.2 Проверка полей комментария
 SELECT
@@ -97,7 +94,7 @@ SELECT
     content,
     created_at
 FROM comments
-WHERE id = :comment_id;
+WHERE id = 1;
 
 
 /* ============================================================
@@ -113,23 +110,23 @@ BEGIN;
 --     Если настроен ON DELETE CASCADE, после удаления orders
 --     дочерние order_items должны исчезнуть.
 DELETE FROM orders
-WHERE id = :order_id;
+WHERE id = 1;
 
 SELECT COUNT(*) AS remaining_order_items_after_parent_delete
 FROM order_items
-WHERE order_id = :order_id;
+WHERE order_id = 1;
 
 -- 4.2 Проверка каскада users -> orders/comments (если предусмотрено)
 DELETE FROM users
-WHERE id = :user_id;
+WHERE id = 1;
 
 SELECT COUNT(*) AS remaining_orders_after_user_delete
 FROM orders
-WHERE user_id = :user_id;
+WHERE user_id = 1;
 
 SELECT COUNT(*) AS remaining_comments_after_user_delete
 FROM comments
-WHERE user_id = :user_id;
+WHERE user_id = 1;
 
 -- Откат, чтобы не портить тестовые данные
 ROLLBACK;
@@ -156,4 +153,3 @@ SELECT c.*
 FROM comments c
 LEFT JOIN users u ON u.id = c.user_id
 WHERE u.id IS NULL;
-
