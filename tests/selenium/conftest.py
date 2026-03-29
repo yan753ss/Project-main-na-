@@ -1,10 +1,13 @@
 import os
 import shutil
+import signal
 import subprocess
 import time
+import warnings
 from pathlib import Path
 
 import pytest
+from requests.exceptions import RequestsDependencyWarning
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -13,6 +16,16 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+
+WEBDRIVER_START_TIMEOUT_SECONDS = int(os.getenv("WEBDRIVER_START_TIMEOUT_SECONDS", "25"))
+
+# Suppress known distro-package mismatch warning that does not affect Selenium flows.
+warnings.filterwarnings("ignore", category=RequestsDependencyWarning)
+warnings.filterwarnings(
+    "ignore",
+    message=r".*strict.*parameter is no longer needed on Python 3\+.*",
+    category=DeprecationWarning,
+)
 
 
 @pytest.fixture(scope="session")
@@ -33,6 +46,19 @@ def frontend_server():
     yield
     process.terminate()
     process.wait(timeout=5)
+
+
+def _run_with_timeout(fn, seconds: int):
+    def _timeout_handler(_signum, _frame):
+        raise TimeoutError(f"webdriver startup timeout after {seconds}s")
+
+    previous_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(seconds)
+    try:
+        return fn()
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous_handler)
 
 
 def _chrome_options() -> ChromeOptions:
@@ -68,27 +94,39 @@ def _start_chrome_with_local_driver():
     local_driver = os.getenv("CHROMEDRIVER") or shutil.which("chromedriver")
     if not local_driver:
         return None
-    return webdriver.Chrome(service=ChromeService(local_driver), options=_chrome_options())
+    return _run_with_timeout(
+        lambda: webdriver.Chrome(service=ChromeService(local_driver), options=_chrome_options()),
+        WEBDRIVER_START_TIMEOUT_SECONDS,
+    )
 
 
 def _start_firefox_with_local_driver():
     local_driver = os.getenv("GECKODRIVER") or shutil.which("geckodriver")
     if not local_driver:
         return None
-    return webdriver.Firefox(service=FirefoxService(local_driver), options=_firefox_options())
+    return _run_with_timeout(
+        lambda: webdriver.Firefox(service=FirefoxService(local_driver), options=_firefox_options()),
+        WEBDRIVER_START_TIMEOUT_SECONDS,
+    )
 
 
 def _start_chrome_with_manager():
-    return webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager().install()),
-        options=_chrome_options(),
+    return _run_with_timeout(
+        lambda: webdriver.Chrome(
+            service=ChromeService(ChromeDriverManager().install()),
+            options=_chrome_options(),
+        ),
+        WEBDRIVER_START_TIMEOUT_SECONDS,
     )
 
 
 def _start_firefox_with_manager():
-    return webdriver.Firefox(
-        service=FirefoxService(GeckoDriverManager().install()),
-        options=_firefox_options(),
+    return _run_with_timeout(
+        lambda: webdriver.Firefox(
+            service=FirefoxService(GeckoDriverManager().install()),
+            options=_firefox_options(),
+        ),
+        WEBDRIVER_START_TIMEOUT_SECONDS,
     )
 
 
@@ -121,7 +159,6 @@ def driver():
             return None
         return None
 
-    # Prefer local drivers first (stable for offline environments).
     browser = None
 
     if chrome_binary:
