@@ -135,4 +135,6 @@ python3 -m pytest -q tests/selenium/test_e2e_flows.py -k login
 
 Если интернета нет и появляется ошибка `Could not reach host`, это означает, что
 `webdriver-manager` не смог скачать драйвер — используйте локальный `chromedriver`/`geckodriver`.
+Если ошибка содержит `cannot find Chrome binary`, значит в системе нет самого браузера (нужен `google-chrome`/`chromium`/`firefox`), а не только драйвера.
+
 
