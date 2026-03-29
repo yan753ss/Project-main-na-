@@ -1,25 +1,53 @@
-
 <!DOCTYPE html>
-<html>
-<head><title>DNS Demo</title></head>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Интернет-магазин</title>
+</head>
 <body>
-<h1>Интернет-магазин</h1>
-<button onclick="load()">Показать товары</button>
-<ul id="list"></ul>
-<script>
-function load() {
- fetch("http://localhost:8001/products")
- .then(r=>r.json())
- .then(d=>{
-   let l=document.getElementById("list");
-   l.innerHTML="";
-   d.forEach(p=>{
-     let i=document.createElement("li");
-     i.innerText=p.name+" "+p.price;
-     l.appendChild(i);
-   });
- })
-}
-</script>
+  <nav>
+    <a id="nav-home" href="/index.html">Главная</a>
+    <a id="nav-login" href="/login.html">Логин</a>
+    <a id="nav-profile" href="/profile.html">Профиль</a>
+  </nav>
+
+  <h1 id="page-title">Интернет-магазин</h1>
+  <p id="home-description">Добро пожаловать в демо-магазин бытовой техники.</p>
+
+  <button id="load-products" onclick="loadProducts()">Показать товары</button>
+  <p id="products-status"></p>
+  <ul id="list"></ul>
+
+  <script>
+    async function loadProducts() {
+      const status = document.getElementById('products-status');
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      status.textContent = 'Загрузка...';
+
+      try {
+        const response = await fetch('http://localhost:8001/products');
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : (data.items || []);
+
+        if (!items.length) {
+          status.textContent = 'Товары не найдены';
+          return;
+        }
+
+        for (const product of items) {
+          const item = document.createElement('li');
+          item.className = 'product-item';
+          item.innerText = `${product.name} ${product.price}`;
+          list.appendChild(item);
+        }
+
+        status.textContent = `Загружено товаров: ${items.length}`;
+      } catch (error) {
+        status.textContent = 'Ошибка загрузки товаров';
+      }
+    }
+  </script>
 </body>
 </html>
