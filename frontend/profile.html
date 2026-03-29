@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Профиль</title>
+</head>
+<body>
+  <nav>
+    <a id="nav-home" href="/index.html">Главная</a>
+    <a id="nav-login" href="/login.html">Логин</a>
+    <a id="nav-profile" href="/profile.html">Профиль</a>
+  </nav>
+
+  <h1 id="profile-title">Профиль пользователя</h1>
+  <p id="profile-message"></p>
+  <button id="logout-btn">Выйти</button>
+
+  <script>
+    const email = localStorage.getItem('currentUserEmail');
+    const message = document.getElementById('profile-message');
+
+    if (!email) {
+      window.location.href = '/login.html';
+    } else {
+      message.textContent = `Вы вошли как: ${email}`;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', function () {
+      localStorage.removeItem('currentUserEmail');
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>
