@@ -109,7 +109,10 @@ python3 -m pip install -r tests/selenium/requirements.txt
 ```
 
 2. Убедиться, что в системе установлен браузер (`google-chrome`, `chromium` или `firefox`).
-   Драйвер подтянется автоматически через `webdriver-manager`.
+3. Для офлайн-среды установить локальный драйвер (`chromedriver` или `geckodriver`) и, при необходимости,
+   задать путь через переменные `CHROMEDRIVER` / `GECKODRIVER`.
+
+По умолчанию тесты сначала ищут локальный драйвер, и только потом пытаются скачать его через `webdriver-manager`.
 
 ### 7.2 Запуск всех Selenium тестов
 
@@ -129,4 +132,7 @@ python3 -m pytest -q tests/selenium/test_e2e_flows.py -k login
 
 Если команда `pytest` не найдена, запускайте именно через модуль Python:
 `python3 -m pytest ...` (как в примерах выше).
+
+Если интернета нет и появляется ошибка `Could not reach host`, это означает, что
+`webdriver-manager` не смог скачать драйвер — используйте локальный `chromedriver`/`geckodriver`.
 
