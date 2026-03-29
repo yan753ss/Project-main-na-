@@ -139,5 +139,12 @@ python3 -m pytest -q tests/selenium/test_e2e_flows.py -k login
 Если интернета нет и появляется ошибка `Could not reach host`, это означает, что
 `webdriver-manager` не смог скачать драйвер — используйте локальный `chromedriver`/`geckodriver`.
 Если ошибка содержит `cannot find Chrome binary`, значит в системе нет самого браузера (нужен `google-chrome`/`chromium`/`firefox`), а не только драйвера.
+Для медленных VM можно увеличить таймаут старта браузера: `WEBDRIVER_START_TIMEOUT_SECONDS=40 python3 -m pytest -q tests/selenium`.
+
+Чтобы явно выбрать браузер и режим:
+- Firefox с видимым окном: `SELENIUM_BROWSER=firefox SELENIUM_HEADLESS=0 python3 -m pytest -s tests/selenium`
+- Chrome headless: `SELENIUM_BROWSER=chrome SELENIUM_HEADLESS=1 python3 -m pytest -q tests/selenium`
+
+По умолчанию: `SELENIUM_BROWSER=auto`, `SELENIUM_HEADLESS=1`.
 
 

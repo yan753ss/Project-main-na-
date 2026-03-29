@@ -17,9 +17,11 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
-WEBDRIVER_START_TIMEOUT_SECONDS = int(os.getenv("WEBDRIVER_START_TIMEOUT_SECONDS", "25"))
+WEBDRIVER_START_TIMEOUT_SECONDS = int(os.getenv("WEBDRIVER_START_TIMEOUT_SECONDS", "15"))
+SELENIUM_BROWSER = os.getenv("SELENIUM_BROWSER", "auto").lower()  # auto|chrome|firefox
+SELENIUM_HEADLESS = os.getenv("SELENIUM_HEADLESS", "1").lower() not in {"0", "false", "no"}
 
-# Suppress known distro-package mismatch warning that does not affect Selenium flows.
+# Suppress known dependency warnings unrelated to project logic.
 warnings.filterwarnings("ignore", category=RequestsDependencyWarning)
 warnings.filterwarnings(
     "ignore",
@@ -63,7 +65,8 @@ def _run_with_timeout(fn, seconds: int):
 
 def _chrome_options() -> ChromeOptions:
     options = ChromeOptions()
-    options.add_argument("--headless=new")
+    if SELENIUM_HEADLESS:
+        options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     return options
@@ -71,7 +74,8 @@ def _chrome_options() -> ChromeOptions:
 
 def _firefox_options() -> FirefoxOptions:
     options = FirefoxOptions()
-    options.add_argument("-headless")
+    if SELENIUM_HEADLESS:
+        options.add_argument("-headless")
     return options
 
 
@@ -134,10 +138,19 @@ def _first_available(paths):
     return next((p for p in paths if shutil.which(p) is not None), None)
 
 
+def _should_try(browser: str) -> bool:
+    return SELENIUM_BROWSER in {"auto", browser}
+
+
 @pytest.fixture
 def driver():
     chrome_binary = _first_available(["google-chrome", "chromium", "chromium-browser"])
     firefox_binary = _first_available(["firefox"])
+
+    if SELENIUM_BROWSER == "chrome" and not chrome_binary:
+        pytest.skip("SELENIUM_BROWSER=chrome, but no Chrome/Chromium binary found")
+    if SELENIUM_BROWSER == "firefox" and not firefox_binary:
+        pytest.skip("SELENIUM_BROWSER=firefox, but no Firefox binary found")
 
     if not chrome_binary and not firefox_binary:
         pytest.skip("No local browser binary found for Selenium execution")
@@ -161,12 +174,12 @@ def driver():
 
     browser = None
 
-    if chrome_binary:
+    if _should_try("chrome") and chrome_binary:
         browser = try_start("chrome(local-driver)", _start_chrome_with_local_driver)
         if browser is None:
             browser = try_start("chrome(webdriver-manager)", _start_chrome_with_manager)
 
-    if browser is None and firefox_binary:
+    if browser is None and _should_try("firefox") and firefox_binary:
         browser = try_start("firefox(local-driver)", _start_firefox_with_local_driver)
         if browser is None:
             browser = try_start("firefox(webdriver-manager)", _start_firefox_with_manager)
