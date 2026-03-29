@@ -92,3 +92,52 @@ docker compose exec -T postgres psql \
 
 Далее открыть `backend/db_verification_checks.sql`, подставить параметры
 и выполнить запросы по блокам.
+
+## 7) Selenium WebDriver (POM) тесты
+
+Подготовлены Page Object Model и e2e сценарии:
+
+- `tests/selenium/pages/home_page.py`
+- `tests/selenium/pages/login_page.py`
+- `tests/selenium/pages/profile_page.py`
+- `tests/selenium/test_e2e_flows.py`
+
+### 7.1 Что нужно перед запуском
+
+1. Установить Python-зависимости:
+
+```bash
+cd ..
+python3 -m pip install -r tests/selenium/requirements.txt
+```
+
+2. Убедиться, что в системе установлен браузер (`google-chrome`, `chromium` или `firefox`).
+3. Для офлайн-среды установить локальный драйвер (`chromedriver` или `geckodriver`) и, при необходимости,
+   задать путь через переменные `CHROMEDRIVER` / `GECKODRIVER`.
+
+По умолчанию тесты сначала ищут локальный драйвер, и только потом пытаются скачать его через `webdriver-manager`.
+
+### 7.2 Запуск всех Selenium тестов
+
+```bash
+cd ..
+python3 -m pytest -q tests/selenium
+```
+
+### 7.3 Запуск одного сценария (пример)
+
+```bash
+cd ..
+python3 -m pytest -q tests/selenium/test_e2e_flows.py -k login
+```
+
+Если браузер не установлен, тесты будут помечены как `skipped` (это ожидаемо).
+
+Если команда `pytest` не найдена, запускайте именно через модуль Python:
+`python3 -m pytest ...` (как в примерах выше).
+
+Если интернета нет и появляется ошибка `Could not reach host`, это означает, что
+`webdriver-manager` не смог скачать драйвер — используйте локальный `chromedriver`/`geckodriver`.
+Если ошибка содержит `cannot find Chrome binary`, значит в системе нет самого браузера (нужен `google-chrome`/`chromium`/`firefox`), а не только драйвера.
+
+
