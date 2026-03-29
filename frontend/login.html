@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Логин</title>
+</head>
+<body>
+  <nav>
+    <a id="nav-home" href="/index.html">Главная</a>
+    <a id="nav-login" href="/login.html">Логин</a>
+    <a id="nav-profile" href="/profile.html">Профиль</a>
+  </nav>
+
+  <h1 id="login-title">Вход в аккаунт</h1>
+
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" />
+
+    <label for="password">Пароль</label>
+    <input id="password" name="password" type="password" />
+
+    <button id="login-btn" type="submit">Войти</button>
+  </form>
+
+  <p id="login-error" style="color: red"></p>
+  <p id="login-success" style="color: green"></p>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const error = document.getElementById('login-error');
+      const success = document.getElementById('login-success');
+
+      error.textContent = '';
+      success.textContent = '';
+
+      if (!email || !password) {
+        error.textContent = 'Заполните email и пароль';
+        return;
+      }
+
+      localStorage.setItem('currentUserEmail', email);
+      success.textContent = 'Вход выполнен успешно';
+
+      setTimeout(function () {
+        window.location.href = '/profile.html';
+      }, 100);
+    });
+  </script>
+</body>
+</html>
