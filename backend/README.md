@@ -148,3 +148,16 @@ python3 -m pytest -q tests/selenium/test_e2e_flows.py -k login
 По умолчанию: `SELENIUM_BROWSER=auto`, `SELENIUM_HEADLESS=1`.
 
 
+Если в Ubuntu доступен только Firefox:
+```bash
+SELENIUM_BROWSER=firefox SELENIUM_HEADLESS=0 python3 -m pytest -s tests/selenium
+```
+
+Если `geckodriver` не установлен в PATH, укажи путь явно:
+```bash
+GECKODRIVER=/usr/local/bin/geckodriver SELENIUM_BROWSER=firefox SELENIUM_HEADLESS=0 python3 -m pytest -s tests/selenium
+```
+
+Если появляется ошибка `Your Firefox profile cannot be loaded`, тесты уже создают временный профиль автоматически; обычно помогает повторный запуск той же команды.
+
+

@@ -2,6 +2,7 @@ import os
 import shutil
 import signal
 import subprocess
+import tempfile
 import time
 import warnings
 from pathlib import Path
@@ -72,10 +73,13 @@ def _chrome_options() -> ChromeOptions:
     return options
 
 
-def _firefox_options() -> FirefoxOptions:
+def _firefox_options(profile_dir: str | None = None) -> FirefoxOptions:
     options = FirefoxOptions()
     if SELENIUM_HEADLESS:
         options.add_argument("-headless")
+    if profile_dir:
+        options.add_argument("-profile")
+        options.add_argument(profile_dir)
     return options
 
 
@@ -104,12 +108,12 @@ def _start_chrome_with_local_driver():
     )
 
 
-def _start_firefox_with_local_driver():
+def _start_firefox_with_local_driver(profile_dir: str | None = None):
     local_driver = os.getenv("GECKODRIVER") or shutil.which("geckodriver")
     if not local_driver:
         return None
     return _run_with_timeout(
-        lambda: webdriver.Firefox(service=FirefoxService(local_driver), options=_firefox_options()),
+        lambda: webdriver.Firefox(service=FirefoxService(local_driver), options=_firefox_options(profile_dir)),
         WEBDRIVER_START_TIMEOUT_SECONDS,
     )
 
@@ -124,11 +128,11 @@ def _start_chrome_with_manager():
     )
 
 
-def _start_firefox_with_manager():
+def _start_firefox_with_manager(profile_dir: str | None = None):
     return _run_with_timeout(
         lambda: webdriver.Firefox(
             service=FirefoxService(GeckoDriverManager().install()),
-            options=_firefox_options(),
+            options=_firefox_options(profile_dir),
         ),
         WEBDRIVER_START_TIMEOUT_SECONDS,
     )
@@ -173,6 +177,7 @@ def driver():
         return None
 
     browser = None
+    firefox_profile_dir = tempfile.mkdtemp(prefix="selenium-firefox-profile-")
 
     if _should_try("chrome") and chrome_binary:
         browser = try_start("chrome(local-driver)", _start_chrome_with_local_driver)
@@ -180,14 +185,16 @@ def driver():
             browser = try_start("chrome(webdriver-manager)", _start_chrome_with_manager)
 
     if browser is None and _should_try("firefox") and firefox_binary:
-        browser = try_start("firefox(local-driver)", _start_firefox_with_local_driver)
+        browser = try_start("firefox(local-driver)", lambda: _start_firefox_with_local_driver(firefox_profile_dir))
         if browser is None:
-            browser = try_start("firefox(webdriver-manager)", _start_firefox_with_manager)
+            browser = try_start("firefox(webdriver-manager)", lambda: _start_firefox_with_manager(firefox_profile_dir))
 
     if browser is None:
         attempts_text = " | ".join(attempts) if attempts else "no driver startup attempts"
+        shutil.rmtree(firefox_profile_dir, ignore_errors=True)
         pytest.skip(f"Selenium browser startup skipped: {attempts_text}")
 
     browser.implicitly_wait(3)
     yield browser
     browser.quit()
+    shutil.rmtree(firefox_profile_dir, ignore_errors=True)
