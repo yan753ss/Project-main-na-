@@ -72,11 +72,14 @@ docker compose --env-file .env up -d postgres
 docker compose exec -T postgres psql \
   -U ${POSTGRES_USER:-shop_user} \
   -d ${POSTGRES_DB:-shop_db} \
+  -v email="'student@example.com'" \
+  -v expected_name="'Иван Иванов'" \
+  -v order_id=1 \
+  -v user_id=1 \
+  -v product_id=1 \
+  -v comment_id=1 \
   -f - < ./db_verification_checks.sql
 ```
-
-Важно: перед запуском замените тестовые значения прямо в `db_verification_checks.sql`
-(`student@example.com`, `Иван Иванов`, `1`) на ваши реальные данные из прогона.
 
 ### 6.3 Ручная проверка в SQL IDE
 
@@ -89,24 +92,3 @@ docker compose exec -T postgres psql \
 
 Далее открыть `backend/db_verification_checks.sql`, подставить параметры
 и выполнить запросы по блокам.
-
-## 7) Selenium WebDriver (POM) тесты
-
-Подготовлены Page Object Model и e2e сценарии:
-
-- `tests/selenium/pages/home_page.py`
-- `tests/selenium/pages/login_page.py`
-- `tests/selenium/pages/profile_page.py`
-- `tests/selenium/test_e2e_flows.py`
-
-### Установка зависимостей
-
-```bash
-python3 -m pip install -r tests/selenium/requirements.txt
-```
-
-### Запуск тестов
-
-```bash
-pytest -q tests/selenium
-```
